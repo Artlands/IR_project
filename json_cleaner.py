@@ -32,15 +32,12 @@ class JsonCleaner:
                 for attr in self.keep_attr:
                     if attr == 'text':
                         clean_data['text'] = data['text']
-                        basic_clean = p.clean(data['text'])         #basic clean
-                        word_tokens = word_tokenize(basic_clean)       #tokenize strings
-                        filtered_sentence = []
-                        for w in word_tokens:
-                            if w not in stop_words:
-                                filtered_sentence.append(w)         #delete stop words
-                        clean_data['tokens'] = word_tokens
+                        basic_clean = p.clean(data['text'])                                 #use preprocessor clean
+                        word_tokens = word_tokenize(basic_clean)                            #tokenize strings
+                        filtered_tokens = [ w for w in word_tokens if w not in stop_words]  #delete stop words
+                        clean_data['tokens'] = filtered_tokens
                     if attr == 'place':
-                        clean_data['place'] = self.trans_place(data['place']['full_name'])    #simplify place info
+                        clean_data['place'] = self.trans_place(data['place']['full_name'])  #simplify place info
                     else:
                         clean_data[attr] = data[attr]
                 out_file.write('%s\n' % json.dumps(clean_data))
@@ -53,7 +50,7 @@ class JsonCleaner:
         """return a new file object ready to write to """
         new_file_name = "%s_cleaned%s" % (self.file_base_name, self.file_ext)
         new_file_path = os.path.join(self.working_dir, new_file_name)
-        strCreatFile = "creating file %s" % (new_file_path)
+        strCreatFile = "Creating file %s" % (new_file_path)
         print (strCreatFile)
         return open(new_file_path, "w")
 
