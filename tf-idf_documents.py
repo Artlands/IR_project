@@ -33,7 +33,7 @@ class TfidfCal:
             else:
                 documents[document['place']] = document['tokens']
 
-        out_file.write(json.dumps(documents))
+        out_file.write('%s\n' % json.dumps(documents))
 
         out_file.close()
 

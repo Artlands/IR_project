@@ -6,6 +6,7 @@ import os
 import json
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
+from textblob import TextBlob
 import preprocessor as p
 p.set_options(p.OPT.URL, p.OPT.MENTION, p.OPT.HASHTAG, p.OPT.RESERVED, p.OPT.EMOJI, p.OPT.SMILEY, p.OPT.NUMBER)
 
@@ -32,10 +33,14 @@ class JsonCleaner:
                 for attr in self.keep_attr:
                     if attr == 'text':
                         clean_data['text'] = data['text']
-                        basic_clean = p.clean(data['text'])                                 #use preprocessor clean
-                        word_tokens = word_tokenize(basic_clean)                            #tokenize strings
-                        filtered_tokens = [ w for w in word_tokens if w not in stop_words]  #delete stop words
-                        clean_data['tokens'] = filtered_tokens
+                        basic_clean = p.clean(data['text'])                                 #use preprocessor to clean
+                        word_tokens = TextBlob(basic_clean).words                           #tokenize strings
+                        infl_tokens = []
+                        for word in word_tokens:                                        #singularize and lemmatization words
+                            infl_tokens.append(word.singularize().lemmatize('v').lower())   #lemmatize verb
+                        first_filtered = [ w for w in infl_tokens if w not in stop_words]  #delete stop words
+                        second_filtered = [ w for w in first_filtered if len(w) > 1]       #delete  words with only one letter
+                        clean_data['tokens'] = second_filtered
                     if attr == 'place':
                         clean_data['place'] = self.trans_place(data['place']['full_name'])  #simplify place info
                     else:
@@ -66,7 +71,7 @@ class JsonCleaner:
             return False
 
     def trans_place(self, place):
-        """nomralize state name, eg Iowa, USA -> IA; San Francisco, CA ->"""
+        """nomralize state name, eg Iowa, USA -> IA; San Francisco, CA -> CA"""
         states = {
             'Alabama': "AL","Alaska" : "AK","Arizona" : "AZ","Arkansas" : "AR","California" : "CA","Colorado" : "CO","Connecticut" : "CT",
             "Delaware" : "DE","Florida" : "FL","Georgia" : "GA","Hawaii" : "HI","Idaho" : "ID","Illinois" : "IL","Indiana" : "IN","Iowa" : "IA",
@@ -78,12 +83,13 @@ class JsonCleaner:
         }
         strSplited = place.split(", ")
         if strSplited[1] == 'USA':
-            if strSplited[0] != "District of Columbia":
+            if strSplited[0] != "District of Columbia" and strSplited[0] in states :
                 newplace = states[strSplited[0]]
             else:
                 newplace = 'MD'
         else:
             newplace = strSplited[1]
+
         return newplace
 
     def parse_args(self, argv):
