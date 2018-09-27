@@ -4,6 +4,7 @@
 import sys
 import os
 import json
+import re
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from textblob import TextBlob
@@ -20,12 +21,18 @@ class JsonCleaner:
         cleaner = JsonCleaner()
         cleaner.clean()
 
+    def remove_unicode(self, text):
+        # text = re.sub(r'\w*\\[u]\S\S\S\S[s]', "", text)
+        text = re.sub(r'\w*\\[u]2026', "", text)
+        return text
+
     def clean(self):
         strInProcess = "Cleaning %s, only keep attribute(s): %s" % (os.path.join(self.working_dir, self.file_base_name + self.file_ext), self.keep_attr)
         print (strInProcess)
 
         out_file = self.get_new_file()
         stop_words = set(stopwords.words('english'))
+        contractions_re = re.compile('\w+\u2026')
         for line in self.in_file:
             data = json.loads(line)
             clean_data = {}
@@ -33,7 +40,8 @@ class JsonCleaner:
                 for attr in self.keep_attr:
                     if attr == 'text':
                         clean_data['text'] = data['text']
-                        basic_clean = p.clean(data['text'])                                 #use preprocessor to clean
+                        removed_uni = self.remove_unicode(data['text'])
+                        basic_clean = p.clean(removed_uni)                                 #use preprocessor to clean
                         word_tokens = TextBlob(basic_clean).words                           #tokenize strings
                         infl_tokens = []
                         for word in word_tokens:                                        #singularize and lemmatization words
