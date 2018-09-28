@@ -23,7 +23,7 @@ class JsonCleaner:
 
     def remove_unicode(self, text):
         # text = re.sub(r'\w*\\[u]\S\S\S\S[s]', "", text)
-        text = re.sub(r'\w*\\[u]2026', "", text)
+        text = re.sub(u"\\[u]\w\w\w\w", "", text)
         return text
 
     def clean(self):
