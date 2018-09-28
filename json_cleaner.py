@@ -8,8 +8,8 @@ import re
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from textblob import TextBlob
-import preprocessor as p
-p.set_options(p.OPT.URL, p.OPT.MENTION, p.OPT.HASHTAG, p.OPT.RESERVED, p.OPT.EMOJI, p.OPT.SMILEY, p.OPT.NUMBER)
+# import preprocessor as p
+# p.set_options(p.OPT.URL, p.OPT.MENTION, p.OPT.HASHTAG, p.OPT.RESERVED, p.OPT.EMOJI, p.OPT.SMILEY, p.OPT.NUMBER)
 
 class JsonCleaner:
 
@@ -21,10 +21,30 @@ class JsonCleaner:
         cleaner = JsonCleaner()
         cleaner.clean()
 
-    def remove_unicode(self, text):
-        # text = re.sub(r'\w*\\[u]\S\S\S\S[s]', "", text)
-        text = re.sub(r'\w*\\[u]2026', "", text)
-        return text
+    def preprocess(self, raw_text):
+        #Remove hyperlinks
+        without_links_text = re.sub('https?:\/\/.*[\r\n]*', '', raw_text)
+        # keep only words
+        # letters_only_text = re.sub("[^a-zA-Z]", " ", raw_text)
+        # convert to lower case and split
+        # words = letters_only_text.lower().split()
+        # remove stopwords
+        # stopword_set = set(stopwords.words("english"))
+        # meaningful_words = [w for w in words if w not in stopword_set]
+        # join the cleaned words in a list
+        # cleaned_word_list = " ".join(meaningful_words)
+        # basic_clean = p.clean(data['text'])                                 #use preprocessor to clean
+        # word_tokens = TextBlob(basic_clean).words                           #tokenize strings
+        # infl_tokens = []
+        # for word in word_tokens:                                        #singularize and lemmatization words
+        #     infl_tokens.append(word.singularize().lemmatize('v').lower())   #lemmatize verb
+        # first_filtered = [ w for w in infl_tokens if w not in stop_words]  #delete stop words
+        # second_filtered = [ w for w in first_filtered if len(w) > 1]       #delete  words with only one letter
+        # third_filtered = [w for w in second_filtered if w[0] != '\\']
+
+        # clean_data['tokens'] = third_filtered
+        cleaned_word_tokens = without_links_text
+        return cleaned_word_tokens
 
     def clean(self):
         strInProcess = "Cleaning %s, only keep attribute(s): %s" % (os.path.join(self.working_dir, self.file_base_name + self.file_ext), self.keep_attr)
@@ -32,24 +52,15 @@ class JsonCleaner:
 
         out_file = self.get_new_file()
         stop_words = set(stopwords.words('english'))
-        contractions_re = re.compile('\w+\u2026')
         for line in self.in_file:
             data = json.loads(line)
             clean_data = {}
             if 'text' in data and 'place' in data and data['place'] != None and self.check_place(data['place']['full_name']): # only keep tweets with valid text and place
                 for attr in self.keep_attr:
                     if attr == 'text':
-                        clean_data['text'] = data['text']
-                        removed_uni = self.remove_unicode(data['text'])
-                        basic_clean = p.clean(removed_uni)                                 #use preprocessor to clean
-                        word_tokens = TextBlob(basic_clean).words                           #tokenize strings
-                        infl_tokens = []
-                        for word in word_tokens:                                        #singularize and lemmatization words
-                            infl_tokens.append(word.singularize().lemmatize('v').lower())   #lemmatize verb
-                        first_filtered = [ w for w in infl_tokens if w not in stop_words]  #delete stop words
-                        second_filtered = [ w for w in first_filtered if len(w) > 1]       #delete  words with only one letter
-                        clean_data['tokens'] = second_filtered
-                    if attr == 'place':
+                        clean_data['raw_text'] = data['text']
+                        clean_data['tokens'] = self.preprocess(data['text'])
+                    elif attr == 'place':
                         clean_data['place'] = self.trans_place(data['place']['full_name'])  #simplify place info
                     else:
                         clean_data[attr] = data[attr]
