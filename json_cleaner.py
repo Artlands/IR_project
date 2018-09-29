@@ -8,8 +8,8 @@ import re
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from textblob import TextBlob
-# import preprocessor as p
-# p.set_options(p.OPT.URL, p.OPT.MENTION, p.OPT.HASHTAG, p.OPT.RESERVED, p.OPT.EMOJI, p.OPT.SMILEY, p.OPT.NUMBER)
+import preprocessor as p
+p.set_options(p.OPT.URL, p.OPT.MENTION, p.OPT.HASHTAG, p.OPT.RESERVED, p.OPT.EMOJI, p.OPT.SMILEY, p.OPT.NUMBER)
 
 class JsonCleaner:
 
@@ -23,8 +23,15 @@ class JsonCleaner:
 
     def preprocess(self, raw_text):
         #Remove hyperlinks
-        without_links_text = re.sub('https?:\/\/.*[\r\n]*', '', raw_text)
-        # keep only words
+        # cleaned_text = re.sub('https?:\/\/.*[\r\n]*', '', raw_text)
+        #Remove hashtag
+        # cleaned_text = re.sub('(@[A-Za-z0-9]+)|([^0-9A-Za-z \t])|(\w+:\/\/\S+)', '', raw_text)
+        #Remove unicode
+        remove_unicode1_text = re.sub('\\u2026', "", raw_text)
+        remove_unicode2_text = re.sub('\\u2019', "'", remove_unicode1_text)
+        # remove_unicode3_text = re.sub('\\[u][A-Za-z0-9]{4}', "", remove_unicode2_text)
+        cleaned_text = p.clean(remove_unicode2_text)
+        # keep only words``
         # letters_only_text = re.sub("[^a-zA-Z]", " ", raw_text)
         # convert to lower case and split
         # words = letters_only_text.lower().split()
@@ -43,7 +50,7 @@ class JsonCleaner:
         # third_filtered = [w for w in second_filtered if w[0] != '\\']
 
         # clean_data['tokens'] = third_filtered
-        cleaned_word_tokens = without_links_text
+        cleaned_word_tokens = cleaned_text
         return cleaned_word_tokens
 
     def clean(self):
