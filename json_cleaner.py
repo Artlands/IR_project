@@ -5,6 +5,7 @@ import sys
 import os
 import json
 import re
+import time
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from textblob import TextBlob
@@ -22,50 +23,42 @@ class JsonCleaner:
         cleaner.clean()
 
     def preprocess(self, raw_text):
-        #Remove hyperlinks
-        # cleaned_text = re.sub('https?:\/\/.*[\r\n]*', '', raw_text)
-        #Remove hashtag
-        # cleaned_text = re.sub('(@[A-Za-z0-9]+)|([^0-9A-Za-z \t])|(\w+:\/\/\S+)', '', raw_text)
-        #Remove unicode
-        remove_unicode1_text = re.sub('\\u2026', "", raw_text)
-        remove_unicode2_text = re.sub('\\u2019', "'", remove_unicode1_text)
-        # remove_unicode3_text = re.sub('\\[u][A-Za-z0-9]{4}', "", remove_unicode2_text)
-        cleaned_text = p.clean(remove_unicode2_text)
-        # keep only words``
-        # letters_only_text = re.sub("[^a-zA-Z]", " ", raw_text)
+        # remove unicode
+        text = "".join([x for x in raw_text if ord(x) < 128])
+        # use preprocessor to clean the text
+        cleaned_text = p.clean(text)
         # convert to lower case and split
-        # words = letters_only_text.lower().split()
+        words = cleaned_text.lower().split()
         # remove stopwords
-        # stopword_set = set(stopwords.words("english"))
-        # meaningful_words = [w for w in words if w not in stopword_set]
+        stopword_set = set(stopwords.words("english"))
+        meaningful_words = [w for w in words if w not in stopword_set]
         # join the cleaned words in a list
-        # cleaned_word_list = " ".join(meaningful_words)
-        # basic_clean = p.clean(data['text'])                                 #use preprocessor to clean
-        # word_tokens = TextBlob(basic_clean).words                           #tokenize strings
-        # infl_tokens = []
-        # for word in word_tokens:                                        #singularize and lemmatization words
-        #     infl_tokens.append(word.singularize().lemmatize('v').lower())   #lemmatize verb
-        # first_filtered = [ w for w in infl_tokens if w not in stop_words]  #delete stop words
-        # second_filtered = [ w for w in first_filtered if len(w) > 1]       #delete  words with only one letter
-        # third_filtered = [w for w in second_filtered if w[0] != '\\']
-
+        cleaned_word_list = " ".join(meaningful_words)
+        #tokenize strings
+        word_tokens = TextBlob(cleaned_word_list).words
+        #singularize and lemmatization words
+        inflection_words = []
+        for word in word_tokens:
+            inflection_words.append(word.singularize().lemmatize('v').lower())
+         #delete  words with only one letter
+        filtered_words = [ w for w in inflection_words if len(w) > 1]
         # clean_data['tokens'] = third_filtered
-        cleaned_word_tokens = cleaned_text
+        cleaned_word_tokens = filtered_words
         return cleaned_word_tokens
+
 
     def clean(self):
         strInProcess = "Cleaning %s, only keep attribute(s): %s" % (os.path.join(self.working_dir, self.file_base_name + self.file_ext), self.keep_attr)
         print (strInProcess)
-
+        start = time.time()
         out_file = self.get_new_file()
-        stop_words = set(stopwords.words('english'))
         for line in self.in_file:
             data = json.loads(line)
             clean_data = {}
             if 'text' in data and 'place' in data and data['place'] != None and self.check_place(data['place']['full_name']): # only keep tweets with valid text and place
                 for attr in self.keep_attr:
                     if attr == 'text':
-                        clean_data['raw_text'] = data['text']
+                        # clean_data['raw_text'] = data['text']
                         clean_data['tokens'] = self.preprocess(data['text'])
                     elif attr == 'place':
                         clean_data['place'] = self.trans_place(data['place']['full_name'])  #simplify place info
@@ -74,8 +67,9 @@ class JsonCleaner:
                 out_file.write('%s\n' % json.dumps(clean_data))
 
         out_file.close()
+        end = time.time()
         strFinished = "Created a cleaned json!"
-        print (strFinished)
+        print (strFinished, "it takes %fs\n" % (end-start))
 
     def get_new_file(self):
         """return a new file object ready to write to """
