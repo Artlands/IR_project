@@ -32,18 +32,24 @@ class TfidfCalculator:
             tfDict[word] = count/float(tokenCount)
         return tfDict
 
-    # def computeIDF(self, docList):
-    #     import math
-    #     idfDict = {}
-    #     N = len(docList)
-    #     idfDict = dict.fromkeys(docList['tokens'].keys(), 0)
-    #     for doc in docList:
-    #         for word, val in doc.items():
-    #             if val > 0:
-    #                 idfDict[word] += 1
-    #     for word, val in idfDict.items():
-    #         idfDict[word] = math.log10(N/float(val))
-    #     return idfDict
+    def computeIDF(self, docList):
+        import math
+        idfDict = {}
+        N = len(docList)
+        # collect all tokens from every documents
+        alltokens = []
+        for i in range(0, N):
+            alltokens = list(set(alltokens + docList[i]["tokens"]))
+
+        alltokens =
+        # idfDict = dict.fromkeys(docList['tokens'].keys(), 0)
+        # for doc in docList:
+        #     for word, val in doc.items():
+        #         if val > 0:
+        #             idfDict[word] += 1
+        # for word, val in idfDict.items():
+        #     idfDict[word] = math.log10(N/float(val))
+        # return idfDict
 
     def calculate(self):
         print ("Calculating tf-idf score of each document in %s\n" % (os.path.join(self.working_dir, self.file_base_name+self.file_ext)))
