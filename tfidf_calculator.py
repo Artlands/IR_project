@@ -66,7 +66,7 @@ class TfidfCalculator:
         print ("Calculating tf-idf score of each document in %s\n" % (os.path.join(self.working_dir, self.file_base_name+self.file_ext)))
         start = time.time()
         out_file = self.get_new_file()
-        docList = {}
+        docList = []
         with self.in_file as f:
             line = f.readline()
             documents = json.loads(line)
