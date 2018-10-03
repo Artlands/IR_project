@@ -76,7 +76,8 @@ class TfidfCalculator:
                 new_doc['place'] = doc['place']
                 wordDict = self.set_weights(doc['tokens'])
                 tfDict = self.computeTF(wordDict, doc['tokens'] )
-                new_doc['tfidf'] = self.computeTFIDF(tfDict, idfDict)
+                tmp_tfidf = self.computeTFIDF(tfDict, idfDict)
+                new_doc['tfidf'] = sorted(tmp_tfidf.items(), key = lambda kv: kv[1], reverse = True)
                 docList.append(new_doc)
 
         out_file.write('%s\n' % json.dumps(docList))
