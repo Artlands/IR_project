@@ -19,7 +19,7 @@ class FileSplitter:
         file_number = 0
         line_number = 1
 
-        print ("Splitting %s into multiple files with %s lines" % (os.path.join(self.working_dir, self.file_base_name+self.file_ext), str(self.split_size)))
+        print (f"Splitting {os.path.join(self.working_dir, self.file_base_name+self.file_ext)} into multiple files with {str(self.split_size)} lines")
 
         out_file = self.get_new_file(file_number)
         for line in self.in_file:
@@ -33,13 +33,13 @@ class FileSplitter:
 
         out_file.close()
 
-        print ("Created %s files." % (str(file_number)))
+        print (f"Created {str(file_number)} files.")
 
     def get_new_file(self,file_number):
         """return a new file object ready to write to"""
-        new_file_name = "%s_%s%s" % (self.file_base_name, str(file_number), self.file_ext)
+        new_file_name = f"{self.file_base_name}_{str(file_number)}{self.file_ext}"
         new_file_path = os.path.join(self.working_dir, new_file_name)
-        print ("creating file %s" % (new_file_path))
+        print (f"creating file {new_file_path}\n")
         return open(new_file_path, 'w')
 
     def parse_args(self,argv):

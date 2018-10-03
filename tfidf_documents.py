@@ -6,20 +6,19 @@ import os
 import json
 import time
 
-class TfidfCal:
+class DataDocument:
 
     def __init__(self):
         self.parse_args(sys.argv)
 
     @staticmethod
     def run():
-        calculater = TfidfCal()
-        calculater.cal()
+        creator = DataDocument()
+        creator.create()
 
-    def cal(self):
+    def create(self):
 
-        strInProcess = "Seperating %s, into documents..." % (os.path.join(self.working_dir, self.file_base_name + self.file_ext))
-        print (strInProcess)
+        print (f"Seperating {os.path.join(self.working_dir, self.file_base_name + self.file_ext)}, into documents...")
         start = time.time()
 
         out_file = self.get_new_file()
@@ -46,8 +45,7 @@ class TfidfCal:
         out_file.close()
 
         end = time.time()
-        print ("Created %s documents in one json file. " % (len(documents)))
-        print ("it takes %fs\n" % (end-start))
+        print (f"Created {len(documents)} documents in one json file. it takes {end-start}s")
 
     def find_record(self, documents, place):
         for dict in documents:
@@ -57,10 +55,9 @@ class TfidfCal:
 
     def get_new_file(self):
         """return a new file object ready to write to """
-        new_file_name = "%s_documents%s" % (self.file_base_name, self.file_ext)
+        new_file_name = f"{self.file_base_name}_documents{self.file_ext}"
         new_file_path = os.path.join(self.working_dir, new_file_name)
-        strCreatFile = "Creating file %s" % (new_file_path)
-        print (strCreatFile)
+        print (f"Creating file {new_file_path}")
         return open(new_file_path, "w")
 
     def parse_args(self,argv):
@@ -80,9 +77,9 @@ class TfidfCal:
 
         Usage:
 
-            $ python tf-idf.py <file_name>
+            $ python tfidf_documents.py <file_name>
 
         """
 
 if __name__ == "__main__":
-    TfidfCal.run()
+    DataDocument.run()

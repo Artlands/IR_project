@@ -43,7 +43,7 @@ class QueryScore:
         out_file.close()
 
         end = time.time()
-        print ("The query scores for %s is saved to one json file. it takes %fs\n" % (self.querylist, (end-start)))
+        print (f"The query scores for {self.querylist} is saved to json file. it takes {end-start}s")
 
     def plot(self):
         x = [x['document'] for x in self.sortedList]
@@ -58,10 +58,9 @@ class QueryScore:
 
     def get_new_file(self):
         """return a new file object ready to write to """
-        new_file_name = "%s_queryScore%s" % (self.file_base_name, self.file_ext)
+        new_file_name = f"{self.file_base_name}_queryScore{self.file_ext}"
         new_file_path = os.path.join(self.working_dir, new_file_name)
-        strCreatFile = "Creating file %s" % (new_file_path)
-        print (strCreatFile)
+        print (f"Creating file{new_file_path}")
         return open(new_file_path, "w")
 
     def parse_args(self,argv):
@@ -80,7 +79,7 @@ class QueryScore:
 
     def usage(self):
         return """
-        Calculate tf-idf score of query in the documents
+        Calculate the tf-idf score of query in the documents
 
         Usage:
 

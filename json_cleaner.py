@@ -48,8 +48,7 @@ class JsonCleaner:
 
 
     def clean(self):
-        strInProcess = "Cleaning %s, only keep attribute(s): %s" % (os.path.join(self.working_dir, self.file_base_name + self.file_ext), self.keep_attr)
-        print (strInProcess)
+        print(f"Cleaning {os.path.join(self.working_dir, self.file_base_name + self.file_ext)}, only keep attribute(s): {self.keep_attr}")
         start = time.time()
         out_file = self.get_new_file()
         for line in self.in_file:
@@ -68,15 +67,13 @@ class JsonCleaner:
 
         out_file.close()
         end = time.time()
-        strFinished = "Created a cleaned json!"
-        print (strFinished, "it takes %fs\n" % (end-start))
+        print(f"Created a cleaned json! it takes {end-start}s")
 
     def get_new_file(self):
         """return a new file object ready to write to """
-        new_file_name = "%s_cleaned%s" % (self.file_base_name, self.file_ext)
+        new_file_name = f"{self.file_base_name}_cleaned{self.file_ext}"
         new_file_path = os.path.join(self.working_dir, new_file_name)
-        strCreatFile = "Creating file %s" % (new_file_path)
-        print (strCreatFile)
+        print (f"Creating file{new_file_path}")
         return open(new_file_path, "w")
 
     def check_place(self, place):

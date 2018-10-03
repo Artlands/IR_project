@@ -7,7 +7,6 @@ import json
 import time
 from collections import defaultdict
 
-
 class TfidfCalculator:
 
     def __init__(self):
@@ -63,7 +62,7 @@ class TfidfCalculator:
 
 
     def calculate(self):
-        print ("Calculating tf-idf score of each document in %s\n" % (os.path.join(self.working_dir, self.file_base_name+self.file_ext)))
+        print (f"Calculating tf-idf score of each document in {os.path.join(self.working_dir, self.file_base_name+self.file_ext)}")
         start = time.time()
         out_file = self.get_new_file()
         docList = []
@@ -76,8 +75,9 @@ class TfidfCalculator:
                 new_doc['place'] = doc['place']
                 wordDict = self.set_weights(doc['tokens'])
                 tfDict = self.computeTF(wordDict, doc['tokens'] )
-                tmp_tfidf = self.computeTFIDF(tfDict, idfDict)
-                new_doc['tfidf'] = sorted(tmp_tfidf.items(), key = lambda kv: kv[1], reverse = True)
+                new_doc['tfidf'] = self.computeTFIDF(tfDict, idfDict)
+                new_doc['sorted_terms'] = sorted(wordDict.items(), key = lambda kv: kv[1], reverse = True)
+                new_doc['sorted_tfidf'] = sorted(new_doc['tfidf'].items(), key = lambda kv: kv[1], reverse = True)
                 docList.append(new_doc)
 
         out_file.write('%s\n' % json.dumps(docList))
@@ -85,13 +85,13 @@ class TfidfCalculator:
         out_file.close()
 
         end = time.time()
-        print ("Calculated all terms accounts, it takes %fs\n" % (end-start))
+        print (f"Calculated all terms tfidf, it takes {end-start}s")
 
     def get_new_file(self):
         """return a new file object ready to write to """
-        new_file_name = "%s_tfidf%s" % (self.file_base_name, self.file_ext)
+        new_file_name = f"{self.file_base_name}_tfidf{self.file_ext}"
         new_file_path = os.path.join(self.working_dir, new_file_name)
-        print ("Creating file %s" % (new_file_path))
+        print (f"Creating file {new_file_path}")
         return open(new_file_path, "w")
 
     def parse_args(self,argv):
