@@ -36,34 +36,47 @@ class TfidfCalculator:
         import math
         idfDict = {}
         N = len(docList)
-        # collect all tokens from every documents
-        alltokens = []
-        for i in range(0, N):
-            alltokens = list(set(alltokens + docList[i]["tokens"]))
 
-        alltokens =
-        # idfDict = dict.fromkeys(docList['tokens'].keys(), 0)
-        # for doc in docList:
-        #     for word, val in doc.items():
-        #         if val > 0:
-        #             idfDict[word] += 1
-        # for word, val in idfDict.items():
-        #     idfDict[word] = math.log10(N/float(val))
-        # return idfDict
+        # collect all tokens from every documents, delete duplicated one
+        all_tokens_tmp = []
+        for i in range(0, N):
+            all_tokens_tmp = all_tokens_tmp + docList[i]["tokens"]
+        all_tokens_set = set(all_tokens_tmp)
+        tokens = [i for i in all_tokens_set]
+
+        # calculate number of documents containing token.
+        for token in tokens:
+            idfDict[token] = 0
+            for doc in docList:
+                if token in doc["tokens"]:
+                    idfDict[token] += 1
+        for token, val in idfDict.items():
+            idfDict[token] = math.log10(N / float(val))
+
+        return idfDict
+
+    def computeTFIDF(self, tfDict, idfDict):
+        tfidf = {}
+        for token, val in tfDict.items():
+            tfidf[token] = val * idfDict[token]
+        return tfidf
+
 
     def calculate(self):
         print ("Calculating tf-idf score of each document in %s\n" % (os.path.join(self.working_dir, self.file_base_name+self.file_ext)))
         start = time.time()
         out_file = self.get_new_file()
-        docList = []
+        docList = {}
         with self.in_file as f:
             line = f.readline()
             documents = json.loads(line)
+            idfDict = self.computeIDF(documents)
             for doc in documents:
                 new_doc={}
                 new_doc['place'] = doc['place']
                 wordDict = self.set_weights(doc['tokens'])
-                new_doc['token_tf'] = self.computeTF(wordDict, doc['tokens'] )
+                tfDict = self.computeTF(wordDict, doc['tokens'] )
+                new_doc['tfidf'] = self.computeTFIDF(tfDict, idfDict)
                 docList.append(new_doc)
 
         out_file.write('%s\n' % json.dumps(docList))
