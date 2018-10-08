@@ -5,7 +5,6 @@ import sys
 import os
 import json
 import time
-import math
 from collections import defaultdict
 
 class TfidfCalculator:
@@ -26,6 +25,7 @@ class TfidfCalculator:
         return(token_counts)
 
     def computeTF(self, wordDict, allterms):
+        import math
         tfDict = {}
         tokenCount = len(allterms)
         for word, count in wordDict.items():
@@ -33,6 +33,7 @@ class TfidfCalculator:
         return tfDict
 
     def computeIDF(self, docList):
+        import math
         idfDict = {}
         N = len(docList)
 
