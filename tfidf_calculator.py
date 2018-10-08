@@ -5,6 +5,7 @@ import sys
 import os
 import json
 import time
+import math
 from collections import defaultdict
 
 class TfidfCalculator:
@@ -32,7 +33,6 @@ class TfidfCalculator:
         return tfDict
 
     def computeIDF(self, docList):
-        import math
         idfDict = {}
         N = len(docList)
 
