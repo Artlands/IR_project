@@ -28,7 +28,7 @@ class TfidfCalculator:
         tfDict = {}
         tokenCount = len(allterms)
         for word, count in wordDict.items():
-            tfDict[word] = count/float(tokenCount)
+            tfDict[word] = 1 + math.log10(count) #log frequent weight
         return tfDict
 
     def computeIDF(self, docList):
