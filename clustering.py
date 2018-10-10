@@ -12,7 +12,7 @@ import pandas as pd
 import nltk
 import codecs
 from sklearn import feature_extraction
-import mpld3
+# import mpld3
 
 import preprocessor as p
 p.set_options(p.OPT.URL, p.OPT.MENTION, p.OPT.HASHTAG, p.OPT.RESERVED, p.OPT.EMOJI, p.OPT.SMILEY, p.OPT.NUMBER)
@@ -29,6 +29,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
+import seaborn as sns
 # import matplotlib as mpl
 # from sklearn.manifold import MDS
 
@@ -83,7 +84,23 @@ class Cluster:
 
         print(f'Tfidf matrix shape: {tfidf_matrix.shape}')
         terms = tfidf_vectorizer.get_feature_names()
-        dist = 1 - cosine_similarity(tfidf_matrix)
+        similarity_matrix = cosine_similarity(tfidf_matrix)
+        
+        #Plot similarity
+        sns.set(style="white")
+        sns.set(font_scale=1)
+        mask = np.zeros_like(similarity_matrix, dtype=np.bool)
+        mask[np.triu_indices_from(mask)] = False
+        f, ax = plt.subplots(figsize=(11, 9))
+
+        c = sns.heatmap(similarity_matrix, mask=mask, cmap="YlGnBu", vmax=1,
+                    square=True, linewidths=0.01,  ax=ax)
+        c.set(xlabel='Document ID', ylabel='Document ID')
+        plt.show()
+        fig = c.get_figure()
+        fig.suptitle('TF-IDF Document Similarity Matrix')
+
+        fig.savefig("similarity.png")
 
         #hierarchy document clustering------------------------------------------
         #Ward clustering is an agglomerative clustering method, meaning that at each stage,
@@ -91,6 +108,7 @@ class Cluster:
         # cosine distance matrix (dist) to calclate a linkage_matrix, which then plot as a dendrogram.
 
         print (f'Hierarchy document clustering...')
+        dist = 1 - cosine_similarity(tfidf_matrix)
         linkage_matrix = ward(dist) #define the linkage_matrix using ward clustering pre-computed distances
 
         fig, ax = plt.subplots(figsize=(15, 20)) # set size
