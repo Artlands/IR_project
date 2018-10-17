@@ -18,34 +18,47 @@ class CreateData:
 
     def create(self):
 
-        print (f"Create data for dataFrame")
+        print (f"Creating data for analysis")
         start = time.time()
 
         out_file = self.get_new_file()
-        result = {}
-        documents = []
-        text = []
-        for line in self.in_file_1:
-            data1 = json.loads(line)
-            for doc in data1:
-                documents.append(doc['place'] + '-0')
-                text.append(doc['text'])
+        documents = {}
+        docList = []
+        place_list = []
+        text_list = []
+        data_last = {}
+        for line in self.in_file:
+            data = json.loads(line)
+            document = {}
+            document['place'] = data['place']
+            document['text'] = data['text']
 
-        for line in self.in_file_2:
-            data2 = json.loads(line)
-            for doc in data2:
-                documents.append(doc['place'] + '-1')
-                text.append(doc['text'])
+            if document['place'] in documents:
+                documents[document['place']]= documents[document['place']] + document['text']
+            else:
+                documents[document['place']] = document['text']
 
-        result['documents'] = documents
-        result['text'] = text
-        print(f"Documents number is {len(documents)}")
+        for key, value in documents.items():
+            docu_item = {}
+            docu_item['place'] = key
+            docu_item['text'] = value
+            docList.append(docu_item)
+            docList = sorted(docList, key = lambda kv: kv['place'], reverse = False)
 
-        out_file.write('%s\n' % json.dumps(result))
+        for doc in docList:
+            place_list.append(doc['place'])
+            text_list.append(doc['text'])
+        data_last['place'] = place_list
+        data_last['text'] = text_list
+
+        print(f"Documents number is {len(place_list)}")
+        print(f"Texts number is {len(text_list)}")
+
+        out_file.write('%s\n' % json.dumps(data_last))
         out_file.close()
 
         end = time.time()
-        print (f"Created data for dataFrame in one json file. it takes {end-start}s")
+        print (f"Created data in one json file. it takes {end-start}s")
 
     def get_new_file(self):
         """return a new file object ready to write to """
@@ -57,19 +70,17 @@ class CreateData:
     def parse_args(self,argv):
         """parse args and set up instance variables"""
         try:
-            self.file_name_1 = argv[1]
-            self.in_file_1 = open(self.file_name_1, "r")
-            self.file_name_2 = argv[2]
-            self.in_file_2 = open(self.file_name_2, "r")
+            self.file_name = argv[1]
+            self.in_file = open(self.file_name, "r")
             self.working_dir = os.getcwd()
-            self.file_base_name, self.file_ext = os.path.splitext(self.file_name_1)
+            self.file_base_name, self.file_ext = os.path.splitext(self.file_name)
         except:
             print (self.usage())
             sys.exit(1)
 
     def usage(self):
         return """
-        Seperate file into several documents
+        Create data for analysis
 
         Usage:
 
