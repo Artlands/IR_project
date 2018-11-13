@@ -6,6 +6,7 @@ import os
 import json
 import re
 import time
+from sklearn import metrics
 from collections import Counter
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
@@ -56,6 +57,8 @@ class NBClassifier:
         self.neutral_class = 0
         self.positive_class = 0
 
+        self.actual = []
+
         self.negative_tokens = []
         self.neutral_tokens = []
         self.positive_tokens = []
@@ -64,22 +67,26 @@ class NBClassifier:
         self.neutral_voc = 0
         self.positive_voc = 0
 
-        for line in self.in_file:
-            file = json.loads(line)
-            if file['Class'] == '-1':
-                self.negative_class += 1
-                self.negative_tokens = self.negative_tokens + self.preprocess(file['Text'])
-            if file['Class'] == '0':
-                self.neutral_class += 1
-                self.neutral_tokens = self.neutral_tokens + self.preprocess(file['Text'])
-            if file['Class'] == '1':
-                self.positive_class += 1
-                self.positive_tokens = self.positive_tokens + self.preprocess(file['Text'])
-        self.in_file.close()
+        with open(self.file_name, "r") as file1:
+            for line in file1:
+                tweet = json.loads(line)
 
-        self.p_negative = self.negative_class / (self.negative_class + self.neutral_class + self.neutral_class)
-        self.p_neutral = self.neutral_class / (self.negative_class + self.neutral_class + self.neutral_class)
-        self.p_positive = self.positive_class / (self.negative_class + self.neutral_class + self.neutral_class)
+                # record the actual class
+                self.actual.append(int(tweet['Class']))
+
+                if tweet['Class'] == '-1':
+                    self.negative_class += 1
+                    self.negative_tokens = self.negative_tokens + self.preprocess(tweet['Text'])
+                if tweet['Class'] == '0':
+                    self.neutral_class += 1
+                    self.neutral_tokens = self.neutral_tokens + self.preprocess(tweet['Text'])
+                if tweet['Class'] == '1':
+                    self.positive_class += 1
+                    self.positive_tokens = self.positive_tokens + self.preprocess(tweet['Text'])
+
+        self.p_negative = self.negative_class / (self.negative_class + self.neutral_class + self.positive_class)
+        self.p_neutral = self.neutral_class / (self.negative_class + self.neutral_class + self.positive_class)
+        self.p_positive = self.positive_class / (self.negative_class + self.neutral_class + self.positive_class)
 
         self.negative_counter = Counter(self.negative_tokens)
         self.neutral_counter = Counter(self.neutral_tokens)
@@ -89,28 +96,44 @@ class NBClassifier:
         self.neutral_voc = len(set(self.neutral_tokens))
         self.positive_voc = len(set(self.positive_tokens))
 
-    def classify(self):
+    def make_predictions(self, text):
         negative_prediction = 1
         neutral_prediction = 1
         positive_prediction = 1
 
-        text = "this is the most happiest moment in my life"
-
         text_tokens = self.preprocess(text)
+
         for word in text_tokens:
             negative_prediction *= self.p_negative * (self.negative_counter[word] + 1)/(len(self.negative_tokens) + self.negative_voc)
             neutral_prediction *= self.p_neutral * (self.neutral_counter[word] + 1)/(len(self.neutral_tokens) + self.neutral_voc)
             positive_prediction *= self.p_positive * (self.positive_counter[word] + 1)/(len(self.positive_tokens) + self.positive_voc)
 
-        print(f"Negative prediction:\t{negative_prediction}")
-        print(f"Neutral prediction:\t{neutral_prediction}")
-        print(f"Positive prediction:\t{positive_prediction}")
+        maximum = max(negative_prediction, neutral_prediction, positive_prediction)
+
+        if negative_prediction == maximum:
+            return -1
+        elif neutral_prediction == maximum:
+            return 0
+        else:
+            return 1
+
+    def classify(self):
+        self.prediction = []
+        with open(self.file_name, "r") as file2:
+            for line in file2:
+                tweet = json.loads(line)
+                # record the predictions class
+                self.prediction.append(self.make_predictions(tweet['Text']))
+
+        # Generate the roc curve using scikits-learn.
+        fpr, tpr, thresholds = metrics.roc_curve(self.actual, self.prediction, pos_label=1)
+        # Measure the area under the curve.  The closer to 1, the "better" the predictions.
+        print("AUC of the predictions: {0}".format(metrics.auc(fpr, tpr)))
 
     def parse_args(self,argv):
         """parse args and set up instance variables"""
         try:
             self.file_name = argv[1]
-            self.in_file = open(self.file_name, "r")
             self.working_dir = os.getcwd()
             self.file_base_name, self.file_ext = os.path.splitext(self.file_name)
         except:
