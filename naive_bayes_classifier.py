@@ -133,14 +133,21 @@ class NBClassifier:
             neutral_prediction *= self.p_neutral * (self.neutral_counter[word] + 1)/(len(self.neutral_tokens) + self.neutral_voc)
             positive_prediction *= self.p_positive * (self.positive_counter[word] + 1)/(len(self.positive_tokens) + self.positive_voc)
 
-        # maximum = max(negative_prediction, neutral_prediction, positive_prediction)
-        if cls == "positive":
-            return positive_prediction/(negative_prediction + neutral_prediction + positive_prediction)
-        if cls == "neutral":
-            return neutral_prediction/(negative_prediction + neutral_prediction + positive_prediction)
-        if cls == "negative":
-            return negative_prediction/(negative_prediction + neutral_prediction + positive_prediction)
-        return 0
+        maximum = max(negative_prediction, neutral_prediction, positive_prediction)
+
+        if negative_prediction == maximum:
+            return -1
+        if neutral_prediction == maximum:
+            return 0
+        return 1
+        
+        # if cls == "positive":
+        #     return positive_prediction/(negative_prediction + neutral_prediction + positive_prediction)
+        # if cls == "neutral":
+        #     return neutral_prediction/(negative_prediction + neutral_prediction + positive_prediction)
+        # if cls == "negative":
+        #     return negative_prediction/(negative_prediction + neutral_prediction + positive_prediction)
+        # return 0
 
     def classify(self):
         self.actual = []
