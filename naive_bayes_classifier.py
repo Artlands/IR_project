@@ -1,4 +1,4 @@
-file_name_train_train#!/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import sys
@@ -93,32 +93,33 @@ class NBClassifier:
         self.neutral_voc = len(set(self.neutral_tokens))
         self.positive_voc = len(set(self.positive_tokens))
 
-        most_occur_neg = self.negative_counter.most_common(100)
-        most_occur_neu = self.neutral_counter.most_common(100)
-        most_occur_pos = self.positive_counter.most_common(100)
-        text_neg = ' '.join([word[0] for word in most_occur_neg])
-        text_neu = ' '.join([word[0] for word in most_occur_neu])
-        text_pos = ' '.join([word[0] for word in most_occur_pos])
+        #Plot the word cloud
+        # most_occur_neg = self.negative_counter.most_common(100)
+        # most_occur_neu = self.neutral_counter.most_common(100)
+        # most_occur_pos = self.positive_counter.most_common(100)
+        # text_neg = ' '.join([word[0] for word in most_occur_neg])
+        # text_neu = ' '.join([word[0] for word in most_occur_neu])
+        # text_pos = ' '.join([word[0] for word in most_occur_pos])
 
         # lower max_font_size
-        wordcloud_neg = WordCloud(max_font_size=50).generate(text_neg)
-        wordcloud_neu = WordCloud(max_font_size=50).generate(text_neu)
-        wordcloud_pos = WordCloud(max_font_size=50).generate(text_pos)
-
-        plt.figure()
-        plt.imshow(wordcloud_neg, interpolation="bilinear")
-        plt.axis("off")
-        plt.savefig('negative_wordcloud', dpi=200)
-
-        plt.figure()
-        plt.imshow(wordcloud_neu, interpolation="bilinear")
-        plt.axis("off")
-        plt.savefig('neutral_wordcloud', dpi=200)
-
-        plt.figure()
-        plt.imshow(wordcloud_pos, interpolation="bilinear")
-        plt.axis("off")
-        plt.savefig('positive_wordcloud', dpi=200)
+        # wordcloud_neg = WordCloud(max_font_size=50).generate(text_neg)
+        # wordcloud_neu = WordCloud(max_font_size=50).generate(text_neu)
+        # wordcloud_pos = WordCloud(max_font_size=50).generate(text_pos)
+        #
+        # plt.figure()
+        # plt.imshow(wordcloud_neg, interpolation="bilinear")
+        # plt.axis("off")
+        # plt.savefig('negative_wordcloud', dpi=200)
+        #
+        # plt.figure()
+        # plt.imshow(wordcloud_neu, interpolation="bilinear")
+        # plt.axis("off")
+        # plt.savefig('neutral_wordcloud', dpi=200)
+        #
+        # plt.figure()
+        # plt.imshow(wordcloud_pos, interpolation="bilinear")
+        # plt.axis("off")
+        # plt.savefig('positive_wordcloud', dpi=200)
 
 
     def make_predictions(self, cls, text):
@@ -133,21 +134,21 @@ class NBClassifier:
             neutral_prediction *= self.p_neutral * (self.neutral_counter[word] + 1)/(len(self.neutral_tokens) + self.neutral_voc)
             positive_prediction *= self.p_positive * (self.positive_counter[word] + 1)/(len(self.positive_tokens) + self.positive_voc)
 
-        maximum = max(negative_prediction, neutral_prediction, positive_prediction)
+        # maximum = max(negative_prediction, neutral_prediction, positive_prediction)
 
-        if negative_prediction == maximum:
-            return -1
-        if neutral_prediction == maximum:
-            return 0
-        return 1
-        
-        # if cls == "positive":
-        #     return positive_prediction/(negative_prediction + neutral_prediction + positive_prediction)
-        # if cls == "neutral":
-        #     return neutral_prediction/(negative_prediction + neutral_prediction + positive_prediction)
-        # if cls == "negative":
-        #     return negative_prediction/(negative_prediction + neutral_prediction + positive_prediction)
-        # return 0
+        # if negative_prediction == maximum:
+        #     return -1
+        # if neutral_prediction == maximum:
+        #     return 0
+        # return 1
+
+        if cls == "positive":
+            return positive_prediction/(negative_prediction + neutral_prediction + positive_prediction)
+        if cls == "neutral":
+            return neutral_prediction/(negative_prediction + neutral_prediction + positive_prediction)
+        if cls == "negative":
+            return negative_prediction/(negative_prediction + neutral_prediction + positive_prediction)
+        return 0
 
     def classify(self):
         self.actual = []
@@ -172,7 +173,7 @@ class NBClassifier:
         fpr_neg, tpr_neg, thresholds_neg = metrics.roc_curve(self.actual, self.prediction_neg, pos_label= -1)
 
         plt.figure()
-        lw = 2
+        lw = 1
         plt.plot(fpr_pos, tpr_pos, color='coral',
                  lw=lw, label='ROC curve of Positive class(area = %0.2f)' % metrics.auc(fpr_pos,tpr_pos))
         plt.plot(fpr_neu, tpr_neu, color='olivedrab',
