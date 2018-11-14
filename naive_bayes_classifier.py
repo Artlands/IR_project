@@ -93,7 +93,11 @@ class NBClassifier:
         self.neutral_voc = len(set(self.neutral_tokens))
         self.positive_voc = len(set(self.positive_tokens))
 
-        #Plot the word cloud
+        print(f"Negative Top 10 words: {self.negative_counter.most_common(10)}")
+        print(f"Neutral Top 10 words: {self.neutral_counter.most_common(10)}")
+        print(f"Positive Top 10 words: {self.positive_counter.most_common(10)}")
+
+        ##Plot the word cloud
         # most_occur_neg = self.negative_counter.most_common(100)
         # most_occur_neu = self.neutral_counter.most_common(100)
         # most_occur_pos = self.positive_counter.most_common(100)
@@ -101,7 +105,7 @@ class NBClassifier:
         # text_neu = ' '.join([word[0] for word in most_occur_neu])
         # text_pos = ' '.join([word[0] for word in most_occur_pos])
 
-        # lower max_font_size
+        ## lower max_font_size
         # wordcloud_neg = WordCloud(max_font_size=50).generate(text_neg)
         # wordcloud_neu = WordCloud(max_font_size=50).generate(text_neu)
         # wordcloud_pos = WordCloud(max_font_size=50).generate(text_pos)
@@ -121,7 +125,6 @@ class NBClassifier:
         # plt.axis("off")
         # plt.savefig('positive_wordcloud', dpi=200)
 
-
     def make_predictions(self, cls, text):
         negative_prediction = 1
         neutral_prediction = 1
@@ -134,14 +137,6 @@ class NBClassifier:
             neutral_prediction *= self.p_neutral * (self.neutral_counter[word] + 1)/(len(self.neutral_tokens) + self.neutral_voc)
             positive_prediction *= self.p_positive * (self.positive_counter[word] + 1)/(len(self.positive_tokens) + self.positive_voc)
 
-        # maximum = max(negative_prediction, neutral_prediction, positive_prediction)
-
-        # if negative_prediction == maximum:
-        #     return -1
-        # if neutral_prediction == maximum:
-        #     return 0
-        # return 1
-
         if cls == "positive":
             return positive_prediction/(negative_prediction + neutral_prediction + positive_prediction)
         if cls == "neutral":
@@ -152,9 +147,15 @@ class NBClassifier:
 
     def classify(self):
         self.actual = []
+        #store the tokens of each classes according to the predictions
+        self.pred_pos_tokes = []
+        self.pred_neu_tokes = []
+        self.pred_neg_tokes = []
+
         self.prediction_pos = []
         self.prediction_neu = []
         self.prediction_neg = []
+
         with open(self.file_name_test, "r") as file2:
             for line in file2:
                 tweet = json.loads(line)
@@ -167,28 +168,72 @@ class NBClassifier:
                 self.prediction_neu.append(self.make_predictions("neutral",tweet['Text']))
                 self.prediction_neg.append(self.make_predictions("negative",tweet['Text']))
 
-        # Generate the roc curve using scikits-learn.
-        fpr_pos, tpr_pos, thresholds_pos = metrics.roc_curve(self.actual, self.prediction_pos, pos_label= 1)
-        fpr_neu, tpr_neu, thresholds_neu = metrics.roc_curve(self.actual, self.prediction_neu, pos_label= 0)
-        fpr_neg, tpr_neg, thresholds_neg = metrics.roc_curve(self.actual, self.prediction_neg, pos_label= -1)
+                if self.make_predictions("positive",tweet['Text']) >= 1/3:
+                    self.pred_pos_tokes.extend(self.preprocess(tweet['Text']))
+                elif self.make_predictions("neutral",tweet['Text']) >= 1/3:
+                    self.pred_neu_tokes.extend(self.preprocess(tweet['Text']))
+                else:
+                    self.pred_neg_tokes.extend(self.preprocess(tweet['Text']))
 
-        plt.figure()
-        lw = 1
-        plt.plot(fpr_pos, tpr_pos, color='coral',
-                 lw=lw, label='ROC curve of Positive class(area = %0.2f)' % metrics.auc(fpr_pos,tpr_pos))
-        plt.plot(fpr_neu, tpr_neu, color='olivedrab',
-                 lw=lw, label='ROC curve of Neutral class(area = %0.2f)' % metrics.auc(fpr_neu, tpr_neu))
-        plt.plot(fpr_neg, tpr_neg, color='steelblue',
-                 lw=lw, label='ROC curve of Negative class(area = %0.2f)' % metrics.auc(fpr_neg, tpr_neg))
-        plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
-        plt.xlim([-0.01, 1.0])
-        plt.ylim([0.0, 1.01])
-        plt.xlabel('False Positive Rate')
-        plt.ylabel('True Positive Rate')
-        plt.title('Receiver operating characteristic')
-        plt.axes().set_aspect('equal')
-        plt.legend(loc="lower right")
-        plt.show()
+        #Generate the prediction word cloud
+        self.pred_pos_counter = Counter(self.pred_pos_tokes)
+        self.pred_neu_counter = Counter(self.pred_neu_tokes)
+        self.pred_neg_counter = Counter(self.pred_neg_tokes)
+
+        print(f"Prediction Positive Top 10 words: {self.pred_pos_counter.most_common(10)}")
+        print(f"Prediction Neutral Top 10 words: {self.pred_neu_counter.most_common(10)}")
+        print(f"Prediction Negative Top 10 words: {self.pred_neg_counter.most_common(10)}")
+
+        # #Plot the word cloud
+        # most_pred_pos = self.pred_pos_counter.most_common(100)
+        # most_pred_neu = self.pred_neu_counter.most_common(100)
+        # most_pred_neg = self.pred_neg_counter.most_common(100)
+        # pred_pos = ' '.join([word[0] for word in most_pred_pos])
+        # pred_neu = ' '.join([word[0] for word in most_pred_neu])
+        # pred_neg = ' '.join([word[0] for word in most_pred_neg])
+        #
+        # # lower max_font_size
+        # pred_cloud_pos = WordCloud(max_font_size=50).generate(pred_pos)
+        # pred_cloud_neu = WordCloud(max_font_size=50).generate(pred_neu)
+        # pred_cloud_neg = WordCloud(max_font_size=50).generate(pred_neg)
+        #
+        # plt.figure()
+        # plt.imshow(pred_cloud_pos, interpolation="bilinear")
+        # plt.axis("off")
+        # plt.savefig('pred_positive_wordcloud', dpi=200)
+        #
+        # plt.figure()
+        # plt.imshow(pred_cloud_neu, interpolation="bilinear")
+        # plt.axis("off")
+        # plt.savefig('pred_neutral_wordcloud', dpi=200)
+        #
+        # plt.figure()
+        # plt.imshow(pred_cloud_neg, interpolation="bilinear")
+        # plt.axis("off")
+        # plt.savefig('pred_negative_wordcloud', dpi=200)
+
+        # Generate the roc curve using scikits-learn.
+        # fpr_pos, tpr_pos, thresholds_pos = metrics.roc_curve(self.actual, self.prediction_pos, pos_label= 1)
+        # fpr_neu, tpr_neu, thresholds_neu = metrics.roc_curve(self.actual, self.prediction_neu, pos_label= 0)
+        # fpr_neg, tpr_neg, thresholds_neg = metrics.roc_curve(self.actual, self.prediction_neg, pos_label= -1)
+        #
+        # plt.figure()
+        # lw = 1
+        # plt.plot(fpr_pos, tpr_pos, color='coral',
+        #          lw=lw, label='ROC curve of Positive class(area = %0.2f)' % metrics.auc(fpr_pos,tpr_pos))
+        # plt.plot(fpr_neu, tpr_neu, color='olivedrab',
+        #          lw=lw, label='ROC curve of Neutral class(area = %0.2f)' % metrics.auc(fpr_neu, tpr_neu))
+        # plt.plot(fpr_neg, tpr_neg, color='steelblue',
+        #          lw=lw, label='ROC curve of Negative class(area = %0.2f)' % metrics.auc(fpr_neg, tpr_neg))
+        # plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+        # plt.xlim([-0.01, 1.0])
+        # plt.ylim([0.0, 1.01])
+        # plt.xlabel('False Positive Rate')
+        # plt.ylabel('True Positive Rate')
+        # plt.title('Receiver operating characteristic')
+        # plt.axes().set_aspect('equal')
+        # plt.legend(loc="lower right")
+        # plt.show()
 
     def parse_args(self,argv):
         """parse args and set up instance variables"""
