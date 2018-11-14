@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+file_name_train_train#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import sys
@@ -53,13 +53,11 @@ class NBClassifier:
         return cleaned_word_tokens
 
 
-    #calucate P(Class), word counter, class vocabulary
+    #calucate P(Class), word counter, class vocabulary, create word cloud
     def calc_class_word(self):
         self.negative_class = 0
         self.neutral_class = 0
         self.positive_class = 0
-
-        self.actual = []
 
         self.negative_tokens = []
         self.neutral_tokens = []
@@ -69,12 +67,9 @@ class NBClassifier:
         self.neutral_voc = 0
         self.positive_voc = 0
 
-        with open(self.file_name, "r") as file1:
+        with open(self.file_name_train, "r") as file1:
             for line in file1:
                 tweet = json.loads(line)
-
-                # record the actual class
-                self.actual.append(int(tweet['Class']))
 
                 if tweet['Class'] == '-1':
                     self.negative_class += 1
@@ -148,12 +143,17 @@ class NBClassifier:
         return 0
 
     def classify(self):
+        self.actual = []
         self.prediction_pos = []
         self.prediction_neu = []
         self.prediction_neg = []
-        with open(self.file_name, "r") as file2:
+        with open(self.file_name_test, "r") as file2:
             for line in file2:
                 tweet = json.loads(line)
+
+                # record the actual class
+                self.actual.append(int(tweet['Class']))
+
                 # record the predictions score for three classes
                 self.prediction_pos.append(self.make_predictions("positive",tweet['Text']))
                 self.prediction_neu.append(self.make_predictions("neutral",tweet['Text']))
@@ -185,9 +185,9 @@ class NBClassifier:
     def parse_args(self,argv):
         """parse args and set up instance variables"""
         try:
-            self.file_name = argv[1]
+            self.file_name_train = argv[1]
+            self.file_name_test = argv[2]
             self.working_dir = os.getcwd()
-            self.file_base_name, self.file_ext = os.path.splitext(self.file_name)
         except:
             print (self.usage())
             sys.exit(1)
@@ -198,7 +198,7 @@ class NBClassifier:
 
         Usage:
 
-            $ python naive_bayes_classifier.py <training_file_name>
+            $ python naive_bayes_classifier.py <training_file_name> <testing_file_name>
 
         """
 
