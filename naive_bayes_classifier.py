@@ -85,6 +85,11 @@ class NBClassifier:
         self.p_neutral = self.neutral_class / (self.negative_class + self.neutral_class + self.positive_class)
         self.p_positive = self.positive_class / (self.negative_class + self.neutral_class + self.positive_class)
 
+        ##class documents counts
+        # print(f"Negative doc#: {self.negative_class}, P(negative_class): {self.p_negative}")
+        # print(f"Neutral doc#: {self.neutral_class}, P(neutral_class): {self.p_neutral}")
+        # print(f"Positive doc#: {self.positive_class}, P(positive_class): {self.p_positive}")
+
         self.negative_counter = Counter(self.negative_tokens)
         self.neutral_counter = Counter(self.neutral_tokens)
         self.positive_counter = Counter(self.positive_tokens)
@@ -93,9 +98,14 @@ class NBClassifier:
         self.neutral_voc = len(set(self.neutral_tokens))
         self.positive_voc = len(set(self.positive_tokens))
 
-        print(f"Negative Top 10 words: {self.negative_counter.most_common(10)}")
-        print(f"Neutral Top 10 words: {self.neutral_counter.most_common(10)}")
-        print(f"Positive Top 10 words: {self.positive_counter.most_common(10)}")
+        # #p(w|c)
+        # print(f"Top 10 words: {[word[0] for word in self.positive_counter.most_common(10)]}")
+        # print(f"Word counts: {[word[1] for word in self.positive_counter.most_common(10)]}")
+        # print(f"P(w|c): {[(word[1] + 1)/(len(self.positive_tokens) + self.positive_voc) for word in self.positive_counter.most_common(10)]}")
+
+        # print(f"Negative Top 10 words: {self.negative_counter.most_common(10)}")
+        # print(f"Neutral Top 10 words: {self.neutral_counter.most_common(10)}")
+        # print(f"Positive Top 10 words: {self.positive_counter.most_common(10)}")
 
         ##Plot the word cloud
         # most_occur_neg = self.negative_counter.most_common(100)
@@ -138,12 +148,20 @@ class NBClassifier:
             positive_prediction *= self.p_positive * (self.positive_counter[word] + 1)/(len(self.positive_tokens) + self.positive_voc)
 
         if cls == "positive":
-            return positive_prediction/(negative_prediction + neutral_prediction + positive_prediction)
+            return positive_prediction
         if cls == "neutral":
-            return neutral_prediction/(negative_prediction + neutral_prediction + positive_prediction)
+            return neutral_prediction
         if cls == "negative":
-            return negative_prediction/(negative_prediction + neutral_prediction + positive_prediction)
+            return negative_prediction
         return 0
+
+        # if cls == "positive":
+        #     return positive_prediction/(negative_prediction + neutral_prediction + positive_prediction)
+        # if cls == "neutral":
+        #     return neutral_prediction/(negative_prediction + neutral_prediction + positive_prediction)
+        # if cls == "negative":
+        #     return negative_prediction/(negative_prediction + neutral_prediction + positive_prediction)
+        # return 0
 
     def classify(self):
         self.actual = []
@@ -157,6 +175,7 @@ class NBClassifier:
         self.prediction_neg = []
 
         with open(self.file_name_test, "r") as file2:
+            # sample_data = [json.loads(next(file2)) for x in range(0, 10)]
             for line in file2:
                 tweet = json.loads(line)
 
@@ -175,14 +194,36 @@ class NBClassifier:
                 else:
                     self.pred_neg_tokes.extend(self.preprocess(tweet['Text']))
 
-        #Generate the prediction word cloud
-        self.pred_pos_counter = Counter(self.pred_pos_tokes)
-        self.pred_neu_counter = Counter(self.pred_neu_tokes)
-        self.pred_neg_counter = Counter(self.pred_neg_tokes)
+        ##print sample data results
+        # sample = []
+        # sample_tokens = []
+        # sample_positive = []
+        # sample_neutral = []
+        # sample_negative = []
+        # for x in range(0,10):
+        #     sample.append(sample_data[x]['Text'])
+        #     sample_tokens.append(self.preprocess(sample_data[x]['Text']))
+        #     sample_positive.append(self.make_predictions("positive",sample_data[x]['Text']))
+        #     sample_neutral.append(self.make_predictions("neutral",sample_data[x]['Text']))
+        #     sample_negative.append(self.make_predictions("negative",sample_data[x]['Text']))
+        # print(f"sample: {sample}")
+        # print()
+        # print(f"sample tokens: {sample_tokens}")
+        # print()
+        # print(f"positive: {sample_positive}")
+        # print()
+        # print(f"neutral: {sample_neutral}")
+        # print()
+        # print(f"negative: {sample_negative}")
 
-        print(f"Prediction Positive Top 10 words: {self.pred_pos_counter.most_common(10)}")
-        print(f"Prediction Neutral Top 10 words: {self.pred_neu_counter.most_common(10)}")
-        print(f"Prediction Negative Top 10 words: {self.pred_neg_counter.most_common(10)}")
+        # #Generate the prediction word cloud
+        # self.pred_pos_counter = Counter(self.pred_pos_tokes)
+        # self.pred_neu_counter = Counter(self.pred_neu_tokes)
+        # self.pred_neg_counter = Counter(self.pred_neg_tokes)
+
+        # print(f"Prediction Positive Top 10 words: {self.pred_pos_counter.most_common(10)}")
+        # print(f"Prediction Neutral Top 10 words: {self.pred_neu_counter.most_common(10)}")
+        # print(f"Prediction Negative Top 10 words: {self.pred_neg_counter.most_common(10)}")
 
         # #Plot the word cloud
         # most_pred_pos = self.pred_pos_counter.most_common(100)
